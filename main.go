@@ -2,21 +2,42 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"exemploserversidetlsclient/src/pb/products"
 	"fmt"
 	"log"
+	"os"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func loadTLSCredentials() (credentials.TransportCredentials, error) {
+	serverCA, err := os.ReadFile("./src/cert/ca-cert.pem")
+	if err != nil {
+		return nil, err
+	}
 
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(serverCA) {
+		return nil, fmt.Errorf("erro ao adicionar o certificado no pool")
+	}
+
+	config := &tls.Config{
+		RootCAs: certPool,
+	}
+
+	return credentials.NewTLS(config), nil
 }
 
 func main() {
-	conn, err := grpc.NewClient("0.0.0.0:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	tlsCredentials, err := loadTLSCredentials()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	conn, err := grpc.NewClient("0.0.0.0:8080", grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		log.Fatalln(err)
 	}
