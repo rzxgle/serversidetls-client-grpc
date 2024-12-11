@@ -24,8 +24,14 @@ func loadTLSCredentials() (credentials.TransportCredentials, error) {
 		return nil, fmt.Errorf("erro ao adicionar o certificado no pool")
 	}
 
+	clientCert, err := tls.LoadX509KeyPair("./src/cert/client-cert.pem", "./src/cert/client-key.pem")
+	if err != nil {
+		return nil, err
+	}
+
 	config := &tls.Config{
-		RootCAs: certPool,
+		Certificates: []tls.Certificate{clientCert},
+		RootCAs:      certPool,
 	}
 
 	return credentials.NewTLS(config), nil
