@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -50,7 +51,11 @@ func main() {
 	defer conn.Close()
 
 	client := products.NewProductServiceClient(conn)
-	productList, err := client.FindAll(context.Background(), &products.ListProductRequest{})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	productList, err := client.FindAll(ctx, &products.ListProductRequest{})
 	if err != nil {
 		log.Fatalln(err)
 	}
